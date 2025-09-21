@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="common-styles.css">
     <style>
         .floor-map {
-            width: 1000px; /* Set a base width for the content */
-            height: 800px; /* Set a base height for the content */
+            width: 1200px; /* Set a base width for the content */
+            height: 1000px; /* Set a base height for the content */
         }
     </style>
 </head>
@@ -118,29 +118,26 @@
         
         // Connections between nodes
         const edges = [
-             ["ADE/MS LAB C-B109", "COMPUTER LAB C-B10"],
-        ["COMPUTER LAB C-B10", "CR-03 C-B11"],
-        ["CR-03 C-B11", "ELECTRICAL DB ROOM C-B12"],
-        ["ELECTRICAL DB ROOM C-B12", "WEST STAIRS"],
-        ["WEST STAIRS", "STAFF ROOM-02(BASIC SCIENCES B-15)"],
-        ["STAFF ROOM-02(BASIC SCIENCES B-15)", "RESEARCH CENTRE B-16"],
-        ["RESEARCH CENTRE B-16", "CR-04 C-B17"],
-        ["CR-04 C-B17", "CR-05 C-B18"],
-        ["CR-05 C-B18", "CR-06 C-B19"],
-        ["CR-06 C-B19", "CAD LAB C-B08"],
-        
-        ["NORTH STAIRS", "STAFFROOM(ED) C-B07"],
-        ["NORTH STAIRS", "XEROX C-B01A"],
-        ["NORTH STAIRS", "DESIGN LAB & MACHINE SHOP C-B20"],
-        ["STAFFROOM(ED) C-B07", "CAD LAB C-B08"],
-        ["CR-06 C-B19", "DESIGN LAB & MACHINE SHOP C-B20"],
-        ["STAFFROOM(ED) C-B07", "COOPERATIVE SOCIETY C-B06"],
-        ["XEROX C-B01A", "COOPERATIVE SOCIETY C-B06"],
-        ["COOPERATIVE SOCIETY C-B06", "XEROX C-B01A"],
-        ["COOPERATIVE SOCIETY C-B06", "CR-01"],
-        ["STORE C-B01", "XEROX C-B01A"],
-        ["STORE C-B01", "ECE LAB C-B02"],
-        ["ECE LAB C-B02", "FM &ML LAB C-B03"],
+            ["ADE/MS LAB C-B109", "COMPUTER LAB C-B10"],
+            ["COMPUTER LAB C-B10", "CR-03 C-B11"],
+            ["CR-03 C-B11", "ELECTRICAL DB ROOM C-B12"],
+            ["ELECTRICAL DB ROOM C-B12", "WEST STAIRS"],
+            ["WEST STAIRS", "STAFF ROOM-02(BASIC SCIENCES B-15)"],
+            ["STAFF ROOM-02(BASIC SCIENCES B-15)", "RESEARCH CENTRE B-16"],
+            ["RESEARCH CENTRE B-16", "CR-04 C-B17"],
+            ["CR-04 C-B17", "CR-05 C-B18"],
+            ["CR-05 C-B18", "CR-06 C-B19"],
+            ["CR-06 C-B19", "CAD LAB C-B08"],
+            ["CAD LAB C-B08", "STAFFROOM(ED) C-B07"],
+            ["STAFFROOM(ED) C-B07", "NORTH STAIRS"],
+            ["STAFFROOM(ED) C-B07", "COOPERATIVE SOCIETY C-B06"],
+            ["COOPERATIVE SOCIETY C-B06", "CR-01"],
+            ["CR-01", "STORE C-B01"],
+            ["STORE C-B01", "XEROX C-B01A"],
+            ["XEROX C-B01A", "NORTH STAIRS"],
+            ["STORE C-B01", "ECE LAB C-B02"],
+            ["ECE LAB C-B02", "FM &ML LAB C-B03"],
+            ["DESIGN LAB & MACHINE SHOP C-B20", "NORTH STAIRS"]
         ];
         
         // Node positions
@@ -156,7 +153,7 @@
         "CR-05 C-B18": { x: 200, y: 300 },
         "CR-06 C-B19": { x: 200, y: 250 },
         "CAD LAB C-B08": { x: 300, y: 250 },
-        "DESIGN LAB & MACHINE SHOP C-B20": { x: 200, y: 150 },
+        "DESIGN LAB & MACHINE SHOP C-B20": { x: 300, y: 150 },
         "NORTH STAIRS": { x: 450, y: 150 },
         "STAFFROOM(ED) C-B07": { x: 450, y: 250 },
         "XEROX C-B01A": { x: 600, y: 150 },
@@ -603,6 +600,106 @@
             }
         }
         
+        function drawPositionMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'current-position';
+            markerEl.style.left = (currentPosition.x - 8) + 'px';
+            markerEl.style.top = (currentPosition.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function drawDestinationMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'destination';
+            markerEl.style.left = (destination.x - 8) + 'px';
+            markerEl.style.top = (destination.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function createAvatar() {
+            const avatarEl = document.createElement('div');
+            avatarEl.className = 'avatar';
+            avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+            avatarEl.style.display = 'none';
+            return avatarEl;
+        }
+        
+        function calculateRoute() {
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            
+            if (!from || !to) {
+                alert('Please select both current location and destination.');
+                return;
+            }
+            
+            if (from === to) {
+                alert('You are already at your destination!');
+                return;
+            }
+            
+            // Create graph and find path
+            const graph = createGraph();
+            const path = findShortestPath(graph, from, to);
+            
+            if (!path) {
+                alert('No path found between the selected locations.');
+                return;
+            }
+            
+            currentPath = path;
+            currentPosition = nodePositions[from];
+            destination = nodePositions[to];
+            
+            // Redraw map with route first
+            drawFloorMap();
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+                document.getElementById('floorMap').appendChild(avatar);
+            }
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+            }
+            
+            // Position avatar at start
+            avatar.style.left = (currentPosition.x - 15) + 'px';
+            avatar.style.top = (currentPosition.y - 15) + 'px';
+            avatar.style.display = 'flex';
+
+            // Highlight selected nodes
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('current-location', 'destination-location');
+            });
+            const fromNodeEl = document.querySelector(`.node[data-id="${from}"]`);
+            const toNodeEl = document.querySelector(`.node[data-id="${to}"]`);
+            if (fromNodeEl) fromNodeEl.classList.add('current-location');
+            if (toNodeEl) toNodeEl.classList.add('destination-location');
+            
+            // Auto-scroll to show the route
+            const mapContainer = document.getElementById('mapContainer');
+            const startPos = nodePositions[from];
+            mapContainer.scrollTo({
+                left: startPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+                top: startPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+                behavior: 'smooth'
+            });
+            
+            const fromText = from;
+            const toText = to;
+            
+            showVoiceNotification(`Route calculated from ${fromText} to ${toText}`, "success");
+        }
+        
         function startGuidance() {
             if (currentPath.length < 2) {
                 alert('Please calculate a route first.');
@@ -704,7 +801,7 @@
                 // Reached destination
                 stopGuidance();
                 const destinationName = currentPath[currentPath.length - 1].replace(/\//g, ' or ').replace(/HOD/gi, 'H O D');
-                speak(`You have arrived at ${destinationName}. Have a great day!`, () => {});
+                speak(`You have arrived at ${destinationName}. Have a great day!`);
                 showVoiceNotification("You have reached your destination!", "success");
             }
         }
@@ -759,11 +856,6 @@
             
             document.getElementById('from').value = '';
             document.getElementById('to').value = '';
-        }
-        function clearNodeHighlights() {
-            document.querySelectorAll('.node').forEach(n => {
-                n.classList.remove('current-location', 'destination-location');
-            });
         }
         
         // Initialize on page load
