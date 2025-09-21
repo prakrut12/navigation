@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM UNIVERSITY Ground Floor Navigation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="common-styles.css">
+    <style>
+        .floor-map {
+            width: 1200px; /* Set a base width for the content */
+            height: 1000px; /* Set a base height for the content */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">GMU</div>
+            <h1>Ground Floor Navigation</h1>
+            <div class="subtitle">Find your way around GM UNIVERSITY Ground floor</div>
+        </header>
+        
+        <div class="search-section">
+            <div class="input-group">
+                <label for="from">From (Current Location)</label>
+                <select id="from">
+                    <option value="">-- Select Current Location --</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="to">To (Destination)</label>
+                <select id="to">
+                    <option value="">-- Select Destination --</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            
+            <button class="search-btn" onclick="calculateRoute()">
+                <i class="fas fa-route"></i> Find Route
+            </button>
+            
+            <div class="voice-control">
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecognition()">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="voice-status" id="voiceStatus">Voice Navigation</div>
+            </div>
+            
+            <div class="voice-settings">
+                <div class="voice-toggle">
+                    <span>Voice Guidance:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="voiceGuidanceToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Select your current location and destination from the dropdown menus</li>
+                <li>Click "Find Route" to calculate the path</li>
+                <li>Use "Start Guidance" to see an animated avatar follow the route</li>
+                <li>Toggle "Voice Guidance" to enable/disable spoken directions</li>
+                <li>Use the + and - buttons to zoom in and out</li>
+                <li>Click on any room in the map to set it as your destination</li>
+                <li>Use the voice button to speak your current location and destination</li>
+            </ul>
+        </div>
+        
+        <div class="map-section">
+            <div class="map-title">
+                <h2>Ground Floor Map</h2>
+                <div class="map-controls">
+                    <button class="control-btn" onclick="startGuidance()">
+                        <i class="fas fa-play"></i> Start Guidance
+                    </button>
+                    <button class="control-btn" onclick="stopGuidance()">
+                        <i class="fas fa-stop"></i> Stop Guidance
+                    </button>
+                    <button class="control-btn" onclick="resetView()">
+                        <i class="fas fa-sync-alt"></i> Reset View
+                    </button>
+                </div>
+            </div>
+            
+            <div class="map-container" id="mapContainer">
+                <div class="floor-map" id="floorMap">
+                    <!-- Map will be drawn by JavaScript -->
+                </div>
+                
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomIn()">+</button>
+                    <button class="zoom-btn" onclick="zoomOut()">-</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>GM UNIVERSITY, Davangere - Ground Floor Navigation System</p>
+            <p>© 2025 GM UNIVERSITY. All rights reserved.</p>
+        </footer>
+    </div>
+    <div class="voice-notification" id="voiceNotification"></div>
+    <script>
+        // Define nodes, edges, and positions
+        const nodes = [
+            "Main Entrance", "North Entrance", "South Entrance", "East Entrance",
+            "Senior Dean C-024", "Principal C-021", "Board Room C-023", 
+            "Office", "Office C-020", 
+            "Staff Room C-013", "Chemistry Lab C-001", "Physics Lab C-004", "Department of Mathematics",
+            "Prof & Head dept of ED", "Seminar Hall C-017 ED", "Training & Placement Cell",
+            "Data Center C-031", "Windows Lab C-032", "Gem Ventures SW-Development C-030", "Research Lab C-033",
+            "Class Room 13 C-012", "Class Room 12 C-011", "Class Room 11 C-010", 
+            "Class Room 10 C-009", "Class Room 9 C-005", "Staff room Physics C-005",
+            "Class Room 7 C-002", "Class Room 15 C-026", "Class Room 8 C-003",
+            "Class Room 16 C-027", "Class Room 17 C-028", "Class Room 18 C-029",
+            "Gents Toilet", "Ladies Toilet", 
+            "Corridor 2.5m", "Corridor 2.95m", "Stage", "Lift",
+            "Professor and Head Department of Robotics C-014", "Wash room (girls) C-015",
+            "Wash room (Boys) C-016", "CASP C-019", "Management Representative C-022", 
+            "Class Room 14 C-025", "Drinking Water"
+        ];
+        
+        // Connections between nodes
+        const edges = [
+            ["Main Entrance", "South Entrance"],
+            ["Corridor 2.5m", "Windows Lab C-032"],
+            ["South Entrance", "Corridor 2.5m"],
+            ["Windows Lab C-032", "Research Lab C-033"],
+            ["Class Room 7 C-002", "Physics Lab C-004"],
+            ["Class Room 7 C-002", "Department of Mathematics"],
+            ["Department of Mathematics", "Chemistry Lab C-001"],
+            ["Physics Lab C-004", "Staff room Physics C-005"],
+            ["Staff room Physics C-005", "Class Room 9 C-005"],
+            ["Drinking Water", "Gents Toilet"],
+            ["Ladies Toilet", "Gents Toilet"],
+            ["Gents Toilet", "Class Room 10 C-009"],
+            ["Class Room 10 C-009", "Class Room 11 C-010"],
+            ["Class Room 11 C-010", "Class Room 12 C-011"],
+            ["Class Room 12 C-011", "Class Room 13 C-012"],
+            ["Class Room 13 C-012", "Seminar Hall C-017 ED"],
+            ["Class Room 13 C-012", "Staff Room C-013"],
+            ["Professor and Head Department of Robotics C-014", "Staff Room C-013"],
+            ["Wash room (girls) C-015", "Professor and Head Department of Robotics C-014"],
+            ["Wash room (Boys) C-016", "Wash room (girls) C-015"],
+            ["Seminar Hall C-017 ED", "Prof & Head dept of ED"],
+           
+           
+            ["Training & Placement Cell", "Prof & Head dept of ED"],
+            ["Stage", "Corridor 2.5m"],
+            
+            ["Stage", "Corridor 2.95m"],
+            ["CASP C-019", "Training & Placement Cell"],
+            ["Corridor 2.95m", "North Entrance"],
+            ["Class Room 7 C-002", "Class Room 8 C-003"],
+            ["Class Room 7 C-002", "Research Lab C-033"],
+            ["Class Room 8 C-003", "Physics Lab C-004"],
+            ["Class Room 9 C-005", "Ladies Toilet"],
+            ["Corridor 2.5m", "Data Center C-031"],
+            ["Data Center C-031", "Gem Ventures SW-Development C-030"],
+            ["Gem Ventures SW-Development C-030", "Class Room 17 C-028"],
+            ["Class Room 17 C-028", "Class Room 16 C-027"],
+            ["Class Room 16 C-027", "Class Room 15 C-026"],
+            ["Class Room 14 C-025", "Class Room 15 C-026"],
+            ["Lift", "Class Room 14 C-025"],
+            ["Class Room 17 C-028", "Class Room 18 C-029"],
+            ["Lift", "East Entrance"],
+            ["East Entrance", "Senior Dean C-024"],
+            ["Senior Dean C-024", "Board Room C-023"],
+            ["Board Room C-023", "Principal C-021"],
+            ["Principal C-021", "Office C-020"],
+            ["Management Representative C-022", "Principal C-021"],
+            ["Office C-020", "Office"],
+            ["CASP C-019", "Board Room C-023"]
+        ];
+        
+        // Node positions
+        const nodePositions = {
+            "Main Entrance": { x: 620, y: 900 },
+            "North Entrance": { x: 620, y: 50 },
+            "South Entrance": { x: 620, y: 850 },
+            "East Entrance": { x:1000, y: 400 },
+            "Senior Dean C-024": { x: 1000, y: 310 },
+            "Principal C-021": { x: 1000, y: 150 },
+            "Management Representative C-022": {x:1000, y:200},
+            "Board Room C-023": { x:1000, y: 250 },
+            "Office": { x: 900, y: 100 },
+            "Office C-020": { x: 1000, y: 100 },
+            "Staff Room C-013": { x: 200, y: 180 },
+            "Chemistry Lab C-001": { x: 200, y: 900 },
+            "Physics Lab C-004": { x: 200, y: 690 },
+            "Department of Mathematics": { x: 200, y: 850 },
+            "Prof & Head dept of ED": { x: 445, y: 250 },
+            "Seminar Hall C-017 ED": { x: 325, y: 250 },
+            "Training & Placement Cell": { x: 725, y: 250 },
+            "CASP C-019":{x: 855, y:250},
+            "Data Center C-031": { x: 725, y: 800 },
+            "Windows Lab C-032": { x: 445, y: 800 },
+            "Gem Ventures SW-Development C-030": { x: 855, y: 800 },
+            "Research Lab C-033": { x: 325, y: 800 },
+            "Class Room 13 C-012": { x: 200, y: 250 },
+            "Class Room 12 C-011": { x: 200, y: 300 },
+            "Class Room 11 C-010": { x: 200, y: 350 },
+            "Class Room 10 C-009": { x: 200, y: 400 },
+            "Class Room 9 C-005": { x: 200, y: 590 },
+            "Gents Toilet": { x: 200, y: 500 },
+            "Ladies Toilet": { x: 200, y: 550 },
+            "Drinking Water":{x: 200, y: 450},
+            "Staff room Physics C-005": { x: 200, y: 640 },
+            "Class Room 7 C-002": { x: 200, y: 800 },
+            "Class Room 8 C-003": { x: 200, y: 740 },
+            "Class Room 15 C-026": { x: 1000, y: 650 },
+            "Class Room 14 C-025": { x: 1000, y: 600 },
+            "Class Room 16 C-027": { x: 1000, y: 730 },
+            "Class Room 17 C-028": { x: 1000, y: 800 },
+            "Class Room 18 C-029": { x: 1000, y: 850 },
+            "Passage": { x: 150, y: 560 },
+            "Corridor 2.5m": { x:620, y: 800 },
+            "Corridor 2.95m": { x: 620, y: 200 },
+            "Stage": { x: 620, y: 300 },
+            "Lift": { x: 1000, y: 450 },
+            "Professor and Head Department of Robotics C-014": { x: 200, y: 140},
+            "Wash room (girls) C-015": { x: 200, y: 100},
+            "Wash room (Boys) C-016": {x: 350, y:100}
+        };
+        
+        const floorConfig = {
+            zoomLevel: 0.8
+        };
+        
+        let currentPath = [];
+        let currentPosition = null;
+        let destination = null;
+        let avatar = null;
+        let guidanceInterval = null;
+        let currentStep = 0;
+        let recognition = null;
+        let isListening = false;
+        let speechSynthesis = window.speechSynthesis;
+        let isSpeaking = false;
+        let isGuidanceActive = false; /* New flag */
+        
+        // Create a graph from edges for pathfinding
+        function createGraph() {
+            const graph = {};
+            
+            // Add nodes
+            nodes.forEach(node => {
+                graph[node] = [];
+            });
+            
+            // Add edges
+            edges.forEach(edge => {
+                const [from, to] = edge;
+                if (graph[from] && graph[to]) {
+                    graph[from].push(to);
+                    graph[to].push(from); // Make it bidirectional
+                } else {
+                    console.error(`Invalid edge: ${from} -> ${to}`);
+                }
+            });
+            
+            return graph;
+        }
+        
+        // Find shortest path using BFS
+        function findShortestPath(graph, start, end) {
+            if (start === end) return [start];
+            
+            const queue = [start];
+            const visited = {[start]: true};
+            const predecessors = {};
+            let found = false;
+            
+            while (queue.length > 0 && !found) {
+                const current = queue.shift();
+                
+                if (graph[current]) {
+                    graph[current].forEach(neighbor => {
+                        if (!visited[neighbor]) {
+                            visited[neighbor] = true;
+                            predecessors[neighbor] = current;
+                            queue.push(neighbor);
+                            
+                            if (neighbor === end) {
+                                found = true;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Reconstruct path
+            if (!found) return null;
+            
+            const path = [end];
+            let current = end;
+            
+            while (current !== start) {
+                current = predecessors[current];
+                path.unshift(current);
+            }
+            
+            return path;
+        }
+        
+        // Voice recognition functions
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showVoiceNotification("Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.", "error");
+                return false;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('voiceBtn').classList.add('listening');
+                document.getElementById('voiceStatus').textContent = "Listening...";
+                showVoiceNotification("Listening... Please speak your current location and destination.", "info");
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript.trim();
+                processVoiceCommand(transcript);
+            };
+            
+            recognition.onerror = function(event) {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceStatus').textContent = "Voice Navigation";
+                
+                let errorMessage = "Voice recognition error. ";
+                if (event.error === 'no-speech') {
+                    errorMessage += "No speech was detected.";
+                } else if (event.error === 'audio-capture') {
+                    errorMessage += "Microphone is not available.";
+                } else if (event.error === 'not-allowed') {
+                    errorMessage += "Microphone permission was denied.";
+                } else {
+                    errorMessage += "Please try again.";
+                }
+                
+                showVoiceNotification(errorMessage, "error");
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceStatus').textContent = "Voice Navigation";
+            };
+            
+            return true;
+        }
+        
+        function toggleVoiceRecognition() {
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+            
+            if (!recognition) {
+                if (!initVoiceRecognition()) {
+                    return;
+                }
+            }
+            
+            try {
+                recognition.start();
+            } catch (e) {
+                showVoiceNotification("Failed to start voice recognition. Please try again.", "error");
+            }
+        }
+        
+        function processVoiceCommand(transcript) {
+            showVoiceNotification(`You said: "${transcript}"`, "info");
+            
+            // Try to extract two locations from the transcript
+            const words = transcript.toUpperCase().split(/\s+/);
+            const foundLocations = [];
+            
+            // Check for each node name in the transcript
+            nodes.forEach(node => {
+                const nodeName = node.toUpperCase();
+                if (transcript.toUpperCase().includes(nodeName)) {
+                    foundLocations.push(node);
+                }
+            });
+            
+            // Also check for partial matches
+            if (foundLocations.length < 2) {
+                nodes.forEach(node => {
+                    const nodeNameParts = node.toUpperCase().split(/[\/\-\s]+/);
+                    for (const part of nodeNameParts) {
+                        if (part.length > 2 && words.includes(part) && !foundLocations.includes(node)) {
+                            foundLocations.push(node);
+                            break;
+                        }
+                    }
+                });
+            }
+            
+            if (foundLocations.length >= 2) {
+                // Use the first two found locations as from and to
+                const from = foundLocations[0];
+                const to = foundLocations[1];
+                
+                document.getElementById('from').value = from;
+                document.getElementById('to').value = to;
+                
+                showVoiceNotification(`Setting route from ${from} to ${to}`, "success");
+                
+                // Calculate the route after a short delay
+                setTimeout(() => {
+                    calculateRoute();
+                }, 500);
+            } else if (foundLocations.length === 1) {
+                // Only one location found, set as destination
+                const to = foundLocations[0];
+                document.getElementById('to').value = to;
+                showVoiceNotification(`Set destination to ${to}. Please select your current location.`, "info");
+            } else {
+                showVoiceNotification("No locations recognized. Please try again with room names like 'C-B10' or 'CAD LAB'.", "error");
+            }
+        }
+        
+        function showVoiceNotification(message, type = "info") {
+            const notification = document.getElementById('voiceNotification');
+            notification.textContent = message;
+            notification.className = 'voice-notification show';
+            
+            if (type === "error") {
+                notification.classList.add('error');
+            } else if (type === "success") {
+                notification.classList.add('success');
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Text-to-speech function
+        function speak(text, callback) {
+            if (!document.getElementById('voiceGuidanceToggle').checked) {
+                if (callback) callback();
+                return;
+            }
+            
+            if (isSpeaking) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 0.8;
+            
+            utterance.onstart = function() {
+                isSpeaking = true;
+                document.getElementById('voiceBtn').classList.add('speaking');
+            };
+            
+            utterance.onend = function() {
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+                if (callback) callback();
+            };
+            
+            utterance.onerror = function() {
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+                if (callback) callback();
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        function getDirectionText(currentNode, nextNode) {
+            const currentPos = nodePositions[currentNode];
+            const nextPos = nodePositions[nextNode];
+            
+            if (!currentPos || !nextPos) return "";
+            
+            const dx = nextPos.x - currentPos.x;
+            const dy = nextPos.y - currentPos.y;
+            
+            let direction = "";
+            
+            // Determine primary direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                direction = dx > 0 ? "east" : "west";
+            } else {
+                direction = dy > 0 ? "south" : "north";
+            }
+            
+            // Clean node names for speech
+            const cleanedCurrentNode = currentNode.replace(/\//g, ' or ');
+            const cleanedNextNode = nextNode.replace(/\//g, ' or ');
+
+            // Specifically handle "HOD" pronunciation
+            const spokenNextNode = cleanedNextNode.replace(/HOD/gi, 'H O D');
+
+            // Check for stairs
+            if (cleanedNextNode.includes("STAIRS") || cleanedNextNode.includes("Stairs")) {
+                return `Proceed to the ${cleanedNextNode}.`;
+            }
+            
+            // Check for labs
+            if (cleanedNextNode.includes("LAB") || cleanedNextNode.includes("Lab")) {
+                return `Head ${direction} to the ${spokenNextNode}.`;
+            }
+            
+            return `Go ${direction} to ${spokenNextNode}.`;
+        }
+        
+        function drawFloorMap() {
+            const mapElement = document.getElementById('floorMap');
+            mapElement.innerHTML = '';
+            
+            // Apply zoom transformation
+            mapElement.style.transform = `scale(${floorConfig.zoomLevel})`;
+            
+            // Draw connections (edges)
+            edges.forEach(edge => {
+                const from = nodePositions[edge[0]];
+                const to = nodePositions[edge[1]];
+                
+                if (from && to) {
+                    const dx = to.x - from.x;
+                    const dy = to.y - from.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const connection = document.createElement('div');
+                    connection.className = 'connection';
+                    connection.style.left = from.x + 'px';
+                    connection.style.top = from.y + 'px';
+                    connection.style.width = length + 'px';
+                    connection.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(connection);
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const position = nodePositions[node];
+                if (position) {
+                    const nodeEl = document.createElement('div');
+                    nodeEl.className = 'node';
+                    
+                    // Add special classes for stairs and labs
+                    if (node.includes('STAIRS') || node.includes('Stairs')) {
+                        nodeEl.classList.add('stairs');
+                    } else if (node.includes('LAB') || node.includes('Lab')) {
+                        nodeEl.classList.add('lab');
+                    }
+                    
+                    nodeEl.style.left = (position.x - 40) + 'px';
+                    nodeEl.style.top = (position.y - 15) + 'px';
+                    nodeEl.setAttribute('data-id', node);
+                    nodeEl.setAttribute('title', node);
+                    
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'node-name';
+                    // Shorten long names for display
+                    const displayName = node.length > 15 ? node.substring(0, 15) + '...' : node;
+                    nameEl.textContent = displayName;
+                    
+                    nodeEl.appendChild(nameEl);
+                    
+                    nodeEl.addEventListener('click', () => {
+                        document.getElementById('to').value = node;
+                        calculateRoute();
+                    });
+                    
+                    mapElement.appendChild(nodeEl);
+                }
+            });
+            
+            // Draw current route if exists
+            if (currentPath.length > 0) {
+                drawRoute();
+            }
+            
+            // Draw current position if exists
+            if (currentPosition) {
+                drawPositionMarker();
+            }
+            
+            // Draw destination if exists
+            if (destination) {
+                drawDestinationMarker();
+            }
+            
+            // Draw avatar if exists
+            if (avatar) {
+                mapElement.appendChild(avatar);
+            }
+        }
+        
+        function drawRoute() {
+            const mapElement = document.getElementById('floorMap');
+            
+            // Draw path segments between each node in the path
+            for (let i = 0; i < currentPath.length - 1; i++) {
+                const startNode = currentPath[i];
+                const endNode = currentPath[i + 1];
+                
+                const startPos = nodePositions[startNode];
+                const endPos = nodePositions[endNode];
+                
+                if (startPos && endPos) {
+                    const dx = endPos.x - startPos.x;
+                    const dy = endPos.y - startPos.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const pathEl = document.createElement('div');
+                    pathEl.className = 'route-path';
+                    pathEl.style.left = startPos.x + 'px';
+                    pathEl.style.top = startPos.y + 'px';
+                    pathEl.style.width = length + 'px';
+                    pathEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(pathEl);
+                }
+            }
+            
+            // Draw direction markers at each node (except the last one)
+            for (let i = 0; i < currentPath.length - 1; i++) {
+                const node = currentPath[i];
+                const nextNode = currentPath[i + 1];
+                
+                const pos = nodePositions[node];
+                const nextPos = nodePositions[nextNode];
+                
+                if (pos && nextPos) {
+                    const markerEl = document.createElement('div');
+                    markerEl.className = 'direction-marker';
+                    markerEl.style.left = (pos.x - 12) + 'px';
+                    markerEl.style.top = (pos.y - 12) + 'px';
+                    markerEl.innerHTML = '<i class="fas fa-arrow-right"></i>';
+                    
+                    // Determine rotation based on direction from current to next node
+                    const dx = nextPos.x - pos.x;
+                    const dy = nextPos.y - pos.y;
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    markerEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(markerEl);
+                }
+            }
+        }
+        
+        function drawPositionMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'current-position';
+            markerEl.style.left = (currentPosition.x - 8) + 'px';
+            markerEl.style.top = (currentPosition.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function drawDestinationMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'destination';
+            markerEl.style.left = (destination.x - 8) + 'px';
+            markerEl.style.top = (destination.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function createAvatar() {
+            const avatarEl = document.createElement('div');
+            avatarEl.className = 'avatar';
+            avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+            avatarEl.style.display = 'none';
+            return avatarEl;
+        }
+        
+        function calculateRoute() {
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            
+            if (!from || !to) {
+                alert('Please select both current location and destination.');
+                return;
+            }
+            
+            if (from === to) {
+                alert('You are already at your destination!');
+                return;
+            }
+            
+            // Create graph and find path
+            const graph = createGraph();
+            const path = findShortestPath(graph, from, to);
+            
+            if (!path) {
+                alert('No path found between the selected locations.');
+                return;
+            }
+            
+            currentPath = path;
+            currentPosition = nodePositions[from];
+            destination = nodePositions[to];
+            
+            // Redraw map with route first
+            drawFloorMap();
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+                document.getElementById('floorMap').appendChild(avatar);
+            }
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+            }
+            
+            // Position avatar at start
+            avatar.style.left = (currentPosition.x - 15) + 'px';
+            avatar.style.top = (currentPosition.y - 15) + 'px';
+            avatar.style.display = 'flex';
+
+            // Highlight selected nodes
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('current-location', 'destination-location');
+            });
+            const fromNodeEl = document.querySelector(`.node[data-id="${from}"]`);
+            const toNodeEl = document.querySelector(`.node[data-id="${to}"]`);
+            if (fromNodeEl) fromNodeEl.classList.add('current-location');
+            if (toNodeEl) toNodeEl.classList.add('destination-location');
+            
+            // Auto-scroll to show the route
+            const mapContainer = document.getElementById('mapContainer');
+            const startPos = nodePositions[from];
+            mapContainer.scrollTo({
+                left: startPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+                top: startPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+                behavior: 'smooth'
+            });
+            
+            const fromText = from;
+            const toText = to;
+            
+            showVoiceNotification(`Route calculated from ${fromText} to ${toText}`, "success");
+        }
+        
+        function startGuidance() {
+            if (currentPath.length < 2) {
+                alert('Please calculate a route first.');
+                return;
+            }
+            
+            // Stop any existing guidance
+            stopGuidance();
+            
+            currentStep = 0;
+            const mapElement = document.getElementById('floorMap');
+            
+            // Position avatar at start
+            const startPos = nodePositions[currentPath[0]];
+            avatar.style.left = (startPos.x - 15) + 'px';
+            avatar.style.top = (startPos.y - 15) + 'px';
+            avatar.style.display = 'flex';
+            avatar.style.animation = 'walk 0.5s infinite';
+            isGuidanceActive = true; /* Set flag to true */
+            
+            // Announce start of guidance
+            const cleanedFromText = currentPath[0].replace(/\//g, ' or ');
+            const cleanedToText = currentPath[currentPath.length - 1].replace(/\//g, ' or ');
+            speak(`Starting navigation from ${cleanedFromText} to ${cleanedToText}. Follow me.`, () => {
+                // After initial announcement, start the guidance loop
+                processNextGuidanceStep();
+            });
+
+            // Start guidance animation
+            // guidanceInterval = setInterval(() => {
+            //     if (currentStep < currentPath.length - 1) {
+            //         const currentNode = currentPath[currentStep];
+            //         const nextNode = currentPath[currentStep + 1];
+            // 
+            //         const currentPos = nodePositions[currentNode];
+            //         const nextPos = nodePositions[nextNode];
+            // 
+            //         // Get direction text
+            //         const directionText = getDirectionText(currentNode, nextNode);
+            // 
+            //         // Speak the direction
+            //         speak(directionText, () => {
+            //             // Move avatar to next position after speaking
+            //             avatar.style.left = (nextPos.x - 15) + 'px';
+            //             avatar.style.top = (nextPos.y - 15) + 'px';
+            // 
+            //             // Auto-scroll to follow avatar
+            //             const mapContainer = document.getElementById('mapContainer');
+            //             mapContainer.scrollTo({
+            //                 left: nextPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+            //                 top: nextPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+            //                 behavior: 'smooth'
+            //             });
+            // 
+            //             currentStep++;
+            //         });
+            //     } else {
+            //         // Reached destination
+            //         stopGuidance();
+            //         const destinationName = currentPath[currentPath.length - 1];
+            //         speak(`You have arrived at ${destinationName}. Have a great day!`);
+            //         showVoiceNotification("You have reached your destination!", "success");
+            //     }
+            // }, 3000); // Increased interval to allow time for speech
+        }
+
+        function processNextGuidanceStep() {
+            if (currentStep < currentPath.length - 1) {
+                const currentNode = currentPath[currentStep];
+                const nextNode = currentPath[currentStep + 1];
+
+                const currentPos = nodePositions[currentNode];
+                const nextPos = nodePositions[nextNode];
+
+                // Get direction text
+                const directionText = getDirectionText(currentNode, nextNode);
+
+                // Speak the direction
+                speak(directionText, () => {
+                    // Move avatar to next position after speaking
+                    avatar.style.left = (nextPos.x - 15) + 'px';
+                    avatar.style.top = (nextPos.y - 15) + 'px';
+
+                    // Auto-scroll to follow avatar
+                    const mapContainer = document.getElementById('mapContainer');
+                    mapContainer.scrollTo({
+                        left: nextPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+                        top: nextPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+                        behavior: 'smooth'
+                    });
+
+                    currentStep++;
+                    // Continue with the next step after a short delay
+                    if (isGuidanceActive) { /* Check flag before scheduling next step */
+                        guidanceInterval = setTimeout(processNextGuidanceStep, 500); 
+                    }
+                });
+            } else {
+                // Reached destination
+                stopGuidance();
+                const destinationName = currentPath[currentPath.length - 1].replace(/\//g, ' or ').replace(/HOD/gi, 'H O D');
+                speak(`You have arrived at ${destinationName}. Have a great day!`);
+                showVoiceNotification("You have reached your destination!", "success");
+            }
+        }
+        
+        function stopGuidance() {
+            isGuidanceActive = false; /* Set flag to false */
+            if (guidanceInterval) {
+                clearTimeout(guidanceInterval); /* Use clearTimeout */
+                guidanceInterval = null;
+            }
+            
+            if (avatar) {
+                avatar.style.animation = 'none';
+            }
+            
+            // Stop any ongoing speech
+            if (isSpeaking) {
+                speechSynthesis.cancel();
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+            }
+        }
+        
+        function zoomIn() {
+            if (floorConfig.zoomLevel < 2) {
+                floorConfig.zoomLevel += 0.1;
+                drawFloorMap();
+            }
+        }
+        
+        function zoomOut() {
+            if (floorConfig.zoomLevel > 0.5) {
+                floorConfig.zoomLevel -= 0.1;
+                drawFloorMap();
+            }
+        }
+        
+        function resetView() {
+            stopGuidance();
+            floorConfig.zoomLevel = 0.8;
+            currentPath = [];
+            currentPosition = null;
+            destination = null;
+            
+            if (avatar) {
+                avatar.style.display = 'none';
+            }
+            
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.scrollTo(0, 0);
+            drawFloorMap();
+            
+            document.getElementById('from').value = '';
+            document.getElementById('to').value = '';
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            // Populate dropdowns
+            const fromSelect = document.getElementById('from');
+            const toSelect = document.getElementById('to');
+            
+            nodes.forEach(node => {
+                // Add to dropdowns
+                const option = document.createElement('option');
+                option.value = node;
+                option.textContent = node;
+                fromSelect.appendChild(option.cloneNode(true));
+                toSelect.appendChild(option.cloneNode(true));
+            });
+            
+            // Create avatar
+            avatar = createAvatar();
+            document.getElementById('floorMap').appendChild(avatar);
+            
+            // Initialize voice recognition
+            initVoiceRecognition();
+            
+            // Draw the floor map
+            drawFloorMap();
+        };
+    </script>
+</body>
+</html>

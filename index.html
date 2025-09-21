@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GM University - Landing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-animate {
+            /* opacity: 0; */
+            /* transform: translateY(30px); */
+            transform: scale(1);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .card-animate.is-visible {
+            opacity: 1;
+            transform: scale(1.05);
+            /* Revert back after a short delay to create a subtle pop */
+            animation: card-pop 0.3s ease-out forwards;
+        }
+        @keyframes card-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glitter {
+            0% { box-shadow: 0 0 0px rgba(255, 215, 0, 0); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+            100% { box-shadow: 0 0 0px rgba(255, 215, 0, 0); }
+        }
+        .card-animate.glitter {
+            animation: glitter 1.5s ease-in-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay for chatbot popup -->
+    <div class="chatbot-overlay" id="chatbot-overlay"></div>
+
+    <!-- Top contact bar -->
+    <div class="topbar">
+        <div class="container topbar__content">
+            <div class="contact-bar">
+                <i class="fa-solid fa-phone"></i> 18001237099
+                <span class="divider">|</span>
+                <i class="fa-solid fa-envelope"></i> info@gmu.ac.in
+              </div>
+            <div class="topbar__right">
+                <button class="btn btn--accent btn--sm">LOGIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main site header -->
+    <header class="site-header">
+        <div class="container header__content">
+            <div class="logo">
+                <img src="https://gmu.ac.in/assets/imgs/gmulogo1.png" alt="GM University Logo" />
+                <span>Welcome to GM University Campus Navigation</span>
+            </div>
+            <nav class="nav"></nav>
+        </div>
+    </header>
+
+    <!-- Hero section -->
+    <section class="hero">
+        <!-- Hero video background -->
+        <div class="hero__video-container">
+            <video autoplay loop muted playsinline class="hero__video">
+                <source src="gmv.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <!-- Blur filter removed as per instructions -->
+        <div class="hero__overlay"></div>
+        <div class="container hero__content">
+            <h1 class="hero__title">GM UNIVERSITY</h1>
+            <p class="hero__subtitle">Navigate, explore, and experience GMU like never before..</p>
+            <p class="hero__desc">
+                Welcome to GMU Campus Navigation – your smart guide across our campus. Easily find classrooms, labs, and auditoriums without confusion.
+            </p>
+            <div class="hero__ctas">
+                <a class="btn btn--gold" href="#university-blocks-map" id="explore-now-btn">Explore Now</a>
+            </div>
+            
+        </div>
+        <button class="carousel__arrow carousel__arrow--left" aria-label="Previous">❮</button>
+        <button class="carousel__arrow carousel__arrow--right" aria-label="Next">❯</button>
+
+        <div class="chat-bubble" id="chatbot-icon">
+            <div class="chat-bubble__icon">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <div class="chat-bubble__text">
+                <div class="chat-bubble__title">GMU AI Assistant</div>
+                <!-- <div class="chat-bubble__sub">Talk with our GMU AI Assistant</div> -->
+            </div>
+        </div>
+    </section>
+    
+      
+    <!-- Blocks Map Section -->
+    <section class="blocks-map-section" id="university-blocks-map">
+        <div class="container">
+            <div class="card large-card">
+                <div class="card__header">University Blocks Map</div>
+                <div class="card__body">
+                    <div class="map-wrapper" id="map-wrapper">
+                        <div class="map-viewport" id="map-viewport" aria-label="Interactive campus map">
+                            <iframe src="../BLOCKS.html" title="Blocks Map" loading="lazy"></iframe>
+                        </div>
+                        <div class="map-controls" aria-label="Map zoom controls">
+                            <button class="map-control-btn" id="map-zoom-in" aria-label="Zoom in">+</button>
+                            <button class="map-control-btn" id="map-zoom-out" aria-label="Zoom out">−</button>
+                            <button class="map-control-btn" id="map-zoom-reset" aria-label="Reset zoom">⤾</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+      
+    <!-- Cards section (5 cards) -->
+    <div style="height: 5px;"></div>
+    <h2 class="section-title">Engineering Block Floors</h2>
+    <section class="cards">
+        <div class="container cards__grid">
+            <div class="card card-animate">
+                <div class="card__header">Basement Floor</div>
+                <div class="card__body center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4453/4453227.png" alt="Building Icon" style="width:64px;height:64px;display:block;margin:0 auto 12px;" />
+                    <ul class="list">
+                        <li>Xerox , Society , R&A Department , CAD Lab </li> 
+                    </ul>
+                    <a class="btn btn--gold btn--sm" href="../0.html">Explore Floor</a>
+                </div>
+            </div>
+            <div class="card card-animate">
+                <div class="card__header">Ground Floor</div>
+                <div class="card__body center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4453/4453227.png" alt="Building Icon" style="width:64px;height:64px;display:block;margin:0 auto 12px;" />
+                    <ul class="list">
+                        <li>Principal Chamber Office, Main Entrance</li>
+                    </ul>
+                    <a class="btn btn--gold btn--sm" href="../1.html">Explore Floor</a>
+                </div>
+            </div>
+            <div class="card card-animate">
+                <div class="card__header">First Floor</div>
+                <div class="card__body center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4453/4453227.png" alt="Building Icon" style="width:64px;height:64px;display:block;margin:0 auto 12px;" />
+                    <ul class="list">
+                        <li>Civil & CS Seminar Hall, Labs</li>
+                    </ul>
+                    <a class="btn btn--gold btn--sm" href="../2.html">Explore Floor</a>
+                </div>
+            </div>
+            <div class="card card-animate">
+                <div class="card__header">Second Floor</div>
+                <div class="card__body center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4453/4453227.png" alt="Building Icon" style="width:64px;height:64px;display:block;margin:0 auto 12px;" />
+                    <ul class="list">
+                        <li>Auditorium , EEE & EC Department, AIML Dept</li>
+                    </ul>
+                    <a class="btn btn--gold btn--sm" href="../3.html">Explore Floor</a>
+                </div>
+            </div>
+            <div class="card card-animate">
+                <div class="card__header">Third Floor</div>
+                <div class="card__body center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4453/4453227.png" alt="Building Icon" style="width:64px;height:64px;display:block;margin:0 auto 12px;" />
+                    <ul class="list">
+                        <li>MBA Auditorium, NCC/NSS, Bioinfomatics </li>
+                    </ul>
+                    <a class="btn btn--gold btn--sm" href="../4.HTML">Explore Floor</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats banner section -->
+    <section class="stats-banner">
+        <div class="container stats-banner__content">
+            <div class="stats-banner__left">
+                <h2 class="stats-banner__title">GM UNIVERSITY</h2>
+                <p class="stats-banner__tagline">Navigate, explore, and experience GMU like never before.....</p>
+            </div>
+            
+            <div class="stats-banner__right">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">10000+</div>
+                        <div class="stat-label">Students</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">67</div>
+                        <div class="stat-label">Programs</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">54</div>
+                        <div class="stat-label">Acres</div>
+                        <div class="stat-sub">Green Vibrant Campus</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">350+</div>
+                        <div class="stat-label">Experienced Faculty</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feedback section -->
+    <section class="feedback">
+        <div class="container feedback__content">
+            <h2 class="feedback__title">Share Your Experience</h2>
+            <p class="feedback__subtitle">Help us improve by sharing your feedback about our website</p>
+            <form class="feedback__form">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="feedback">Your Feedback</label>
+                    <textarea id="feedback" name="feedback" rows="5" required placeholder="Tell us about your experience with our website..."></textarea>
+                </div>
+                <button type="submit" class="btn btn--gold">Submit Feedback</button>
+            </form>
+        </div>
+    </section>
+
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <h3>GMU AI Assistant</h3>
+            <button class="close-chat" id="close-chat">X</button>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <!-- Chat messages will go here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Ask a question...">
+            <button id="mic-btn" class="icon-button"><i class="fas fa-microphone"></i></button>
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatbotIcon = document.getElementById('chatbot-icon');
+        if (chatbotIcon) {
+            chatbotIcon.classList.add('chat-bubble--active');
+        }
+    });
+    // Easing function for smooth animation (moved to global scope)
+    function ease(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+    }
+
+    // Generic smooth scroll function
+    function smoothScrollToTarget(targetElement) {
+        const startPosition = window.pageYOffset;
+        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+        const distance = targetPosition - startPosition;
+        const duration = 1500; // 1500ms for a slower scroll
+        let startTime = null;
+
+        function animation(currentTime) {
+            if (startTime === null) startTime = currentTime;
+            const timeElapsed = currentTime - startTime;
+            const run = ease(timeElapsed, startPosition, distance, duration);
+            window.scrollTo(0, run);
+            if (timeElapsed < duration) {
+                requestAnimationFrame(animation);
+            } else {
+                // Ensure the final position is set accurately
+                window.scrollTo(0, targetPosition);
+                // Only show cards if scrolling to the engineering block floors
+                if (targetElement.classList.contains('cards')) {
+                    animateCardsInStaggered();
+                }
+            }
+        }
+
+        requestAnimationFrame(animation);
+    }
+
+    // Function to animate cards in with a staggered effect
+    function animateCardsInStaggered() {
+        const cards = document.querySelectorAll('.cards .card-animate');
+        cards.forEach((card, index) => {
+            // Remove existing classes to allow re-triggering animations
+            card.classList.remove('is-visible');
+            card.classList.remove('glitter');
+            // Trigger reflow to restart animation (important for re-applying the same animation)
+            void card.offsetWidth;
+            setTimeout(() => {
+                card.classList.add('is-visible');
+                card.classList.add('glitter');
+            }, index * 150); // Staggered delay for each card
+        });
+    }
+
+    document.getElementById('explore-now-btn').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default anchor link behavior
+
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            smoothScrollToTarget(targetElement);
+        }
+    });
+
+    // Listen for messages from the iframe
+    window.addEventListener('message', function(event) {
+        if (event.source === document.querySelector('iframe[title="Blocks Map"]').contentWindow &&
+            event.data && event.data.type === 'scroll' && event.data.target === 'engineering-block-floors') {
+            
+            event.preventDefault();
+            
+            const targetElement = document.querySelector('.cards'); // The section containing the floor cards
+            if (targetElement) {
+                smoothScrollToTarget(targetElement);
+            }
+        }
+    });
+</script>

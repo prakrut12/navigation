@@ -1,1 +1,1 @@
-# navigation
+# 7th_sem

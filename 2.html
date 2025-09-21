@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM UNIVERSITY First Floor Navigation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="common-styles.css">
+    <style>
+        .floor-map {
+            width: 1200px; /* Set a base width for the content */
+            height: 1200px; /* Set a base height for the content */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">GMU</div>
+            <h1> First Floor Navigation</h1>
+            <div class="subtitle">Find your way around GM UNIVERSITY First floor</div>
+        </header>
+        
+        <div class="search-section">
+            <div class="input-group">
+                <label for="from">From (Current Location)</label>
+                <select id="from">
+                    <option value="">-- Select Current Location --</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="to">To (Destination)</label>
+                <select id="to">
+                    <option value="">-- Select Destination --</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+            
+            <button class="search-btn" onclick="calculateRoute()">
+                <i class="fas fa-route"></i> Find Route
+            </button>
+            
+            <div class="voice-control">
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecognition()">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="voice-status" id="voiceStatus">Voice Navigation</div>
+            </div>
+            
+            <div class="voice-settings">
+                <div class="voice-toggle">
+                    <span>Voice Guidance:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="voiceGuidanceToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Select your current location and destination from the dropdown menus</li>
+                <li>Click "Find Route" to calculate the path</li>
+                <li>Use "Start Guidance" to see an animated avatar follow the route</li>
+                <li>Toggle "Voice Guidance" to enable/disable spoken directions</li>
+                <li>Use the + and - buttons to zoom in and out</li>
+                <li>Click on any room in the map to set it as your destination</li>
+                <li>Use the voice button to speak your current location and destination</li>
+            </ul>
+        </div>
+        
+        <div class="map-section">
+            <div class="map-title">
+                <h2> First Floor Map</h2>
+                <div class="map-controls">
+                    <button class="control-btn" onclick="startGuidance()">
+                        <i class="fas fa-play"></i> Start Guidance
+                    </button>
+                    <button class="control-btn" onclick="stopGuidance()">
+                        <i class="fas fa-stop"></i> Stop Guidance
+                    </button>
+                    <button class="control-btn" onclick="resetView()">
+                        <i class="fas fa-sync-alt"></i> Reset View
+                    </button>
+                </div>
+            </div>
+            
+            <div class="map-container" id="mapContainer">
+                <div class="floor-map" id="floorMap">
+                    <!-- Map will be drawn by JavaScript -->
+                </div>
+                
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomIn()">+</button>
+                    <button class="zoom-btn" onclick="zoomOut()">-</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>GM UNIVERSITY, Davangere -First Floor Navigation System</p>
+            <p>© 2025 GM UNIVERSITY. All rights reserved.</p>
+        </footer>
+    </div>
+    <div class="voice-notification" id="voiceNotification"></div>
+    <script>
+        // Define nodes, edges, and positions
+        const nodes = [
+            "NORTH STAIRS", "STAFF-ROOM 8/ CR-123", "C-122", "C-121", "CAD LAB/C-118",
+            "LADIES TOILET 1", "GENTS TOILET 1", "C-117", "C-116", "C-115",
+            "C-114", "STAFF ROOM-7 /C-113", "GENTS TOILET-2", "WEST STAIRS", "LADIES TOILET-2",
+            "C-109", "CS STAFF ROOM-6/C-108", "C-107", "C-106", "C-105",
+            "ISE-HOD/C-104", "STAFF ROOM-5/C-103", "NETWORK LAB/C-102", "PROJECT LAB/C-101", "SOUTH STAIRS",
+            "COMPUTER CENTER/C-140", "UPS", "STAFF-ROOM-10/C-139", "SEMINAR HALL/C-138", "ALGORITHMS & OS LAB/C-134",
+            "ANALOG & DIGITAL ELECTRONICS LAB/C-135", "MICROPROCESSOR & MICROCONTROLLER LAB/C-136", "CS STAFF ROOM-7/C-133", "C-132", "CS HOD ROOM",
+            "EAST STAIRS", "C-130", "C-129", "ENVIRONMENTAL LAB/C-126", "C-127",
+            "C-128", "CIVIL SEMINAR HALL", "CIVIL HOD ROOM"
+        ];
+        
+        // Connections between nodes
+        const edges = [
+            ["NORTH STAIRS", "STAFF-ROOM 8/ CR-123"],
+            ["STAFF-ROOM 8/ CR-123", "C-122"],
+            ["STAFF-ROOM 8/ CR-123", "CIVIL HOD ROOM"],
+            ["C-122", "C-121"],
+            ["C-121", "CAD LAB/C-118"],
+            ["CAD LAB/C-118", "LADIES TOILET 1"],
+            ["CAD LAB/C-118", "C-117"],
+            ["LADIES TOILET 1", "GENTS TOILET 1"],
+            ["C-117", "C-116"],
+            ["C-116", "C-115"],
+            ["C-115", "C-114"],
+            ["C-114", "STAFF ROOM-7 /C-113"],
+            ["STAFF ROOM-7 /C-113", "GENTS TOILET-2"],
+            ["GENTS TOILET-2", "WEST STAIRS"],
+            ["WEST STAIRS", "LADIES TOILET-2"],
+            ["LADIES TOILET-2", "C-109"],
+            ["C-109", "CS STAFF ROOM-6/C-108"],
+            ["CS STAFF ROOM-6/C-108", "C-107"],
+            ["C-107", "C-106"],
+            ["C-106", "C-105"],
+            ["C-105", "ISE-HOD/C-104"],
+            ["ISE-HOD/C-104", "STAFF ROOM-5/C-103"],
+            ["STAFF ROOM-5/C-103", "NETWORK LAB/C-102"],
+            ["NETWORK LAB/C-102", "PROJECT LAB/C-101"],
+            ["STAFF-ROOM-10/C-139", "SOUTH STAIRS"],
+            ["COMPUTER CENTER/C-140", "UPS"],
+            ["COMPUTER CENTER/C-140","C-105"],
+            ["COMPUTER CENTER/C-140", "STAFF-ROOM-10/C-139"],
+            ["STAFF-ROOM-10/C-139", "SEMINAR HALL/C-138"],
+            ["SEMINAR HALL/C-138", "ALGORITHMS & OS LAB/C-134"],
+            ["ALGORITHMS & OS LAB/C-134", "ANALOG & DIGITAL ELECTRONICS LAB/C-135"],
+            ["ANALOG & DIGITAL ELECTRONICS LAB/C-135", "MICROPROCESSOR & MICROCONTROLLER LAB/C-136"],
+            ["ALGORITHMS & OS LAB/C-134", "CS STAFF ROOM-7/C-133"],
+            ["CS STAFF ROOM-7/C-133", "C-132"],
+            ["EAST STAIRS", "C-130"],
+            ["EAST STAIRS","CS HOD ROOM"],
+            ["CS HOD ROOM","C-132"],
+            ["C-130", "C-129"],
+            ["C-129", "C-128"],
+            ["C-128", "CIVIL SEMINAR HALL"],
+            ["CIVIL SEMINAR HALL", "CIVIL HOD ROOM"],
+            ["C-127", "C-128"],
+            ["C-127","ENVIRONMENTAL LAB/C-126"]
+        ];
+        
+        // Node positions
+        const nodePositions = {
+            "NORTH STAIRS": { x: 525, y: 50 },
+            "STAFF-ROOM 8/ CR-123": { x: 525, y: 150 },
+            "C-122": { x: 410, y: 150 },
+            "C-121": { x: 320, y: 150 },
+            "CIVIL HOD ROOM": { x: 670, y: 150 },
+            "CIVIL SEMINAR HALL": { x: 800, y: 150 },
+            "CAD LAB/C-118": { x: 200, y: 150 },
+            "LADIES TOILET 1": { x: 200, y: 60 },
+            "GENTS TOILET 1": { x: 330, y: 60 },
+            "C-117": { x: 200, y: 220 },
+            "C-116": { x: 200, y: 280 },
+            "C-115": { x: 200, y: 340 },
+            "C-114": { x: 200, y: 400 },
+            "STAFF ROOM-7 /C-113": { x: 200, y: 460 },
+            "GENTS TOILET-2": { x: 200, y: 520 },
+            "WEST STAIRS": { x: 100, y: 570 },
+            "LADIES TOILET-2": { x: 200, y: 620 },
+            "C-109": { x: 200, y: 680 },
+            "CS STAFF ROOM-6/C-108": { x: 200, y: 740 },
+            "C-107": { x: 200, y: 800 },
+            "C-106": { x: 200, y: 860 },
+            "C-105": { x: 200, y: 920 },
+            "ISE-HOD/C-104": { x: 200, y: 980 },
+            "STAFF ROOM-5/C-103": { x: 200, y: 1040 },
+            "NETWORK LAB/C-102": { x: 200, y: 1100 },
+            "PROJECT LAB/C-101": { x: 200, y: 1160 },
+            "SOUTH STAIRS": { x: 570, y: 1150 },
+            "COMPUTER CENTER/C-140": { x: 300, y: 920 },
+            "UPS": { x: 450, y: 920 },
+            "STAFF-ROOM-10/C-139": { x: 570, y: 920 },
+            "SEMINAR HALL/C-138": { x: 770, y: 920 },
+            "ALGORITHMS & OS LAB/C-134": { x: 950, y: 920 },
+            "ANALOG & DIGITAL ELECTRONICS LAB/C-135": { x: 950, y: 1040 },
+            "MICROPROCESSOR & MICROCONTROLLER LAB/C-136": { x: 950, y: 1150 },
+            "CS STAFF ROOM-7/C-133": { x: 950, y: 850 },
+            "C-132": { x: 950, y: 790 },
+            "CS HOD ROOM": { x: 950, y: 700 },
+            "EAST STAIRS": { x: 1050, y: 560 },
+            "C-130": { x: 950, y: 400 },
+            "C-129": { x: 950, y: 300 },
+            "ENVIRONMENTAL LAB/C-126": { x: 800, y: 50 },
+            "C-127": { x: 950, y: 50 },
+            "C-128": { x: 950, y: 150 }
+            
+        };
+        const floorConfig = {
+            zoomLevel: 0.8
+        };
+        
+        let currentPath = [];
+        let currentPosition = null;
+        let destination = null;
+        let avatar = null;
+        let guidanceInterval = null;
+        let currentStep = 0;
+        let recognition = null;
+        let isListening = false;
+        let speechSynthesis = window.speechSynthesis;
+        let isSpeaking = false;
+        let isGuidanceActive = false; /* New flag */
+        
+        // Create a graph from edges for pathfinding
+        function createGraph() {
+            const graph = {};
+            
+            // Add nodes
+            nodes.forEach(node => {
+                graph[node] = [];
+            });
+            
+            // Add edges
+            edges.forEach(edge => {
+                const [from, to] = edge;
+                if (graph[from] && graph[to]) {
+                    graph[from].push(to);
+                    graph[to].push(from); // Make it bidirectional
+                } else {
+                    console.error(`Invalid edge: ${from} -> ${to}`);
+                }
+            });
+            
+            return graph;
+        }
+        
+        // Find shortest path using BFS
+        function findShortestPath(graph, start, end) {
+            if (start === end) return [start];
+            
+            const queue = [start];
+            const visited = {[start]: true};
+            const predecessors = {};
+            let found = false;
+            
+            while (queue.length > 0 && !found) {
+                const current = queue.shift();
+                
+                if (graph[current]) {
+                    graph[current].forEach(neighbor => {
+                        if (!visited[neighbor]) {
+                            visited[neighbor] = true;
+                            predecessors[neighbor] = current;
+                            queue.push(neighbor);
+                            
+                            if (neighbor === end) {
+                                found = true;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Reconstruct path
+            if (!found) return null;
+            
+            const path = [end];
+            let current = end;
+            
+            while (current !== start) {
+                current = predecessors[current];
+                path.unshift(current);
+            }
+            
+            return path;
+        }
+        
+        // Voice recognition functions
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showVoiceNotification("Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.", "error");
+                return false;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('voiceBtn').classList.add('listening');
+                document.getElementById('voiceStatus').textContent = "Listening...";
+                showVoiceNotification("Listening... Please speak your current location and destination.", "info");
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript.trim();
+                processVoiceCommand(transcript);
+            };
+            
+            recognition.onerror = function(event) {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceStatus').textContent = "Voice Navigation";
+                
+                let errorMessage = "Voice recognition error. ";
+                if (event.error === 'no-speech') {
+                    errorMessage += "No speech was detected.";
+                } else if (event.error === 'audio-capture') {
+                    errorMessage += "Microphone is not available.";
+                } else if (event.error === 'not-allowed') {
+                    errorMessage += "Microphone permission was denied.";
+                } else {
+                    errorMessage += "Please try again.";
+                }
+                
+                showVoiceNotification(errorMessage, "error");
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('voiceBtn').classList.remove('listening');
+                document.getElementById('voiceStatus').textContent = "Voice Navigation";
+            };
+            
+            return true;
+        }
+        
+        function toggleVoiceRecognition() {
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+            
+            if (!recognition) {
+                if (!initVoiceRecognition()) {
+                    return;
+                }
+            }
+            
+            try {
+                recognition.start();
+            } catch (e) {
+                showVoiceNotification("Failed to start voice recognition. Please try again.", "error");
+            }
+        }
+        
+        function processVoiceCommand(transcript) {
+            showVoiceNotification(`You said: "${transcript}"`, "info");
+            
+            // Try to extract two locations from the transcript
+            const words = transcript.toUpperCase().split(/\s+/);
+            const foundLocations = [];
+            
+            // Check for each node name in the transcript
+            nodes.forEach(node => {
+                const nodeName = node.toUpperCase();
+                if (transcript.toUpperCase().includes(nodeName)) {
+                    foundLocations.push(node);
+                }
+            });
+            
+            // Also check for partial matches
+            if (foundLocations.length < 2) {
+                nodes.forEach(node => {
+                    const nodeNameParts = node.toUpperCase().split(/[\/\-\s]+/);
+                    for (const part of nodeNameParts) {
+                        if (part.length > 2 && words.includes(part) && !foundLocations.includes(node)) {
+                            foundLocations.push(node);
+                            break;
+                        }
+                    }
+                });
+            }
+            
+            if (foundLocations.length >= 2) {
+                // Use the first two found locations as from and to
+                const from = foundLocations[0];
+                const to = foundLocations[1];
+                
+                document.getElementById('from').value = from;
+                document.getElementById('to').value = to;
+                
+                showVoiceNotification(`Setting route from ${from} to ${to}`, "success");
+                
+                // Calculate the route after a short delay
+                setTimeout(() => {
+                    calculateRoute();
+                }, 500);
+            } else if (foundLocations.length === 1) {
+                // Only one location found, set as destination
+                const to = foundLocations[0];
+                document.getElementById('to').value = to;
+                showVoiceNotification(`Set destination to ${to}. Please select your current location.`, "info");
+            } else {
+                showVoiceNotification("No locations recognized. Please try again with room names like 'C-B10' or 'CAD LAB'.", "error");
+            }
+        }
+        
+        function showVoiceNotification(message, type = "info") {
+            const notification = document.getElementById('voiceNotification');
+            notification.textContent = message;
+            notification.className = 'voice-notification show';
+            
+            if (type === "error") {
+                notification.classList.add('error');
+            } else if (type === "success") {
+                notification.classList.add('success');
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Text-to-speech function
+        function speak(text, callback) {
+            if (!document.getElementById('voiceGuidanceToggle').checked) {
+                if (callback) callback();
+                return;
+            }
+            
+            if (isSpeaking) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 0.8;
+            
+            utterance.onstart = function() {
+                isSpeaking = true;
+                document.getElementById('voiceBtn').classList.add('speaking');
+            };
+            
+            utterance.onend = function() {
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+                if (callback) callback();
+            };
+            
+            utterance.onerror = function() {
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+                if (callback) callback();
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        function getDirectionText(currentNode, nextNode) {
+            const currentPos = nodePositions[currentNode];
+            const nextPos = nodePositions[nextNode];
+            
+            if (!currentPos || !nextPos) return "";
+            
+            const dx = nextPos.x - currentPos.x;
+            const dy = nextPos.y - currentPos.y;
+            
+            let direction = "";
+            
+            // Determine primary direction
+            if (Math.abs(dx) > Math.abs(dy)) {
+                direction = dx > 0 ? "east" : "west";
+            } else {
+                direction = dy > 0 ? "south" : "north";
+            }
+            
+            // Clean node names for speech
+            const cleanedCurrentNode = currentNode.replace(/\//g, ' or ');
+            const cleanedNextNode = nextNode.replace(/\//g, ' or ');
+
+            // Specifically handle "HOD" pronunciation
+            const spokenNextNode = cleanedNextNode.replace(/HOD/gi, 'H O D');
+
+            // Check for stairs
+            if (cleanedNextNode.includes("STAIRS") || cleanedNextNode.includes("Stairs")) {
+                return `Proceed to the ${cleanedNextNode}.`;
+            }
+            
+            // Check for labs
+            if (cleanedNextNode.includes("LAB") || cleanedNextNode.includes("Lab")) {
+                return `Head ${direction} to the ${spokenNextNode}.`;
+            }
+            
+            return `Go ${direction} to ${spokenNextNode}.`;
+        }
+        
+        function drawFloorMap() {
+            const mapElement = document.getElementById('floorMap');
+            mapElement.innerHTML = '';
+            
+            // Apply zoom transformation
+            mapElement.style.transform = `scale(${floorConfig.zoomLevel})`;
+            
+            // Draw connections (edges)
+            edges.forEach(edge => {
+                const from = nodePositions[edge[0]];
+                const to = nodePositions[edge[1]];
+                
+                if (from && to) {
+                    const dx = to.x - from.x;
+                    const dy = to.y - from.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const connection = document.createElement('div');
+                    connection.className = 'connection';
+                    connection.style.left = from.x + 'px';
+                    connection.style.top = from.y + 'px';
+                    connection.style.width = length + 'px';
+                    connection.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(connection);
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                const position = nodePositions[node];
+                if (position) {
+                    const nodeEl = document.createElement('div');
+                    nodeEl.className = 'node';
+                    
+                    // Add special classes for stairs and labs
+                    if (node.includes('STAIRS') || node.includes('Stairs')) {
+                        nodeEl.classList.add('stairs');
+                    } else if (node.includes('LAB') || node.includes('Lab')) {
+                        nodeEl.classList.add('lab');
+                    }
+                    
+                    nodeEl.style.left = (position.x - 40) + 'px';
+                    nodeEl.style.top = (position.y - 15) + 'px';
+                    nodeEl.setAttribute('data-id', node);
+                    nodeEl.setAttribute('title', node);
+                    
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'node-name';
+                    // Shorten long names for display
+                    const displayName = node.length > 15 ? node.substring(0, 15) + '...' : node;
+                    nameEl.textContent = displayName;
+                    
+                    nodeEl.appendChild(nameEl);
+                    
+                    nodeEl.addEventListener('click', () => {
+                        document.getElementById('to').value = node;
+                        calculateRoute();
+                    });
+                    
+                    mapElement.appendChild(nodeEl);
+                }
+            });
+            
+            // Draw current route if exists
+            if (currentPath.length > 0) {
+                drawRoute();
+            }
+            
+            // Draw current position if exists
+            if (currentPosition) {
+                drawPositionMarker();
+            }
+            
+            // Draw destination if exists
+            if (destination) {
+                drawDestinationMarker();
+            }
+            
+            // Draw avatar if exists
+            if (avatar) {
+                mapElement.appendChild(avatar);
+            }
+        }
+        
+        function drawRoute() {
+            const mapElement = document.getElementById('floorMap');
+            
+            // Draw path segments between each node in the path
+            for (let i = 0; i < currentPath.length - 1; i++) {
+                const startNode = currentPath[i];
+                const endNode = currentPath[i + 1];
+                
+                const startPos = nodePositions[startNode];
+                const endPos = nodePositions[endNode];
+                
+                if (startPos && endPos) {
+                    const dx = endPos.x - startPos.x;
+                    const dy = endPos.y - startPos.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    const pathEl = document.createElement('div');
+                    pathEl.className = 'route-path';
+                    pathEl.style.left = startPos.x + 'px';
+                    pathEl.style.top = startPos.y + 'px';
+                    pathEl.style.width = length + 'px';
+                    pathEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(pathEl);
+                }
+            }
+            
+            // Draw direction markers at each node (except the last one)
+            for (let i = 0; i < currentPath.length - 1; i++) {
+                const node = currentPath[i];
+                const nextNode = currentPath[i + 1];
+                
+                const pos = nodePositions[node];
+                const nextPos = nodePositions[nextNode];
+                
+                if (pos && nextPos) {
+                    const markerEl = document.createElement('div');
+                    markerEl.className = 'direction-marker';
+                    markerEl.style.left = (pos.x - 12) + 'px';
+                    markerEl.style.top = (pos.y - 12) + 'px';
+                    markerEl.innerHTML = '<i class="fas fa-arrow-right"></i>';
+                    
+                    // Determine rotation based on direction from current to next node
+                    const dx = nextPos.x - pos.x;
+                    const dy = nextPos.y - pos.y;
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    markerEl.style.transform = `rotate(${angle}deg)`;
+                    
+                    mapElement.appendChild(markerEl);
+                }
+            }
+        }
+        
+        function drawPositionMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'current-position';
+            markerEl.style.left = (currentPosition.x - 8) + 'px';
+            markerEl.style.top = (currentPosition.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function drawDestinationMarker() {
+            const mapElement = document.getElementById('floorMap');
+            
+            const markerEl = document.createElement('div');
+            markerEl.className = 'destination';
+            markerEl.style.left = (destination.x - 8) + 'px';
+            markerEl.style.top = (destination.y - 8) + 'px';
+            
+            mapElement.appendChild(markerEl);
+        }
+        
+        function createAvatar() {
+            const avatarEl = document.createElement('div');
+            avatarEl.className = 'avatar';
+            avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+            avatarEl.style.display = 'none';
+            return avatarEl;
+        }
+        
+        function calculateRoute() {
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            
+            if (!from || !to) {
+                alert('Please select both current location and destination.');
+                return;
+            }
+            
+            if (from === to) {
+                alert('You are already at your destination!');
+                return;
+            }
+            
+            // Create graph and find path
+            const graph = createGraph();
+            const path = findShortestPath(graph, from, to);
+            
+            if (!path) {
+                alert('No path found between the selected locations.');
+                return;
+            }
+            
+            currentPath = path;
+            currentPosition = nodePositions[from];
+            destination = nodePositions[to];
+            
+            // Redraw map with route first
+            drawFloorMap();
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+                document.getElementById('floorMap').appendChild(avatar);
+            }
+
+            // Create avatar if it doesn't exist
+            if (!avatar) {
+                avatar = createAvatar();
+            }
+            
+            // Position avatar at start
+            avatar.style.left = (currentPosition.x - 15) + 'px';
+            avatar.style.top = (currentPosition.y - 15) + 'px';
+            avatar.style.display = 'flex';
+
+            // Highlight selected nodes
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('current-location', 'destination-location');
+            });
+            const fromNodeEl = document.querySelector(`.node[data-id="${from}"]`);
+            const toNodeEl = document.querySelector(`.node[data-id="${to}"]`);
+            if (fromNodeEl) fromNodeEl.classList.add('current-location');
+            if (toNodeEl) toNodeEl.classList.add('destination-location');
+            
+            // Auto-scroll to show the route
+            const mapContainer = document.getElementById('mapContainer');
+            const startPos = nodePositions[from];
+            mapContainer.scrollTo({
+                left: startPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+                top: startPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+                behavior: 'smooth'
+            });
+            
+            const fromText = from;
+            const toText = to;
+            
+            showVoiceNotification(`Route calculated from ${fromText} to ${toText}`, "success");
+        }
+        
+        function startGuidance() {
+            if (currentPath.length < 2) {
+                alert('Please calculate a route first.');
+                return;
+            }
+            
+            // Stop any existing guidance
+            stopGuidance();
+            
+            currentStep = 0;
+            const mapElement = document.getElementById('floorMap');
+            
+            // Position avatar at start
+            const startPos = nodePositions[currentPath[0]];
+            avatar.style.left = (startPos.x - 15) + 'px';
+            avatar.style.top = (startPos.y - 15) + 'px';
+            avatar.style.display = 'flex';
+            avatar.style.animation = 'walk 0.5s infinite';
+            isGuidanceActive = true; /* Set flag to true */
+            
+            // Announce start of guidance
+            const cleanedFromText = currentPath[0].replace(/\//g, ' or ');
+            const cleanedToText = currentPath[currentPath.length - 1].replace(/\//g, ' or ');
+            speak(`Starting navigation from ${cleanedFromText} to ${cleanedToText}. Follow me.`, () => {
+                // After initial announcement, start the guidance loop
+                processNextGuidanceStep();
+            });
+
+            // Start guidance animation
+            // guidanceInterval = setInterval(() => {
+            //     if (currentStep < currentPath.length - 1) {
+            //         const currentNode = currentPath[currentStep];
+            //         const nextNode = currentPath[currentStep + 1];
+            // 
+            //         const currentPos = nodePositions[currentNode];
+            //         const nextPos = nodePositions[nextNode];
+            // 
+            //         // Get direction text
+            //         const directionText = getDirectionText(currentNode, nextNode);
+            // 
+            //         // Speak the direction
+            //         speak(directionText, () => {
+            //             // Move avatar to next position after speaking
+            //             avatar.style.left = (nextPos.x - 15) + 'px';
+            //             avatar.style.top = (nextPos.y - 15) + 'px';
+            // 
+            //             // Auto-scroll to follow avatar
+            //             const mapContainer = document.getElementById('mapContainer');
+            //             mapContainer.scrollTo({
+            //                 left: nextPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+            //                 top: nextPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+            //                 behavior: 'smooth'
+            //             });
+            // 
+            //             currentStep++;
+            //         });
+            //     } else {
+            //         // Reached destination
+            //         stopGuidance();
+            //         const destinationName = currentPath[currentPath.length - 1];
+            //         speak(`You have arrived at ${destinationName}. Have a great day!`);
+            //         showVoiceNotification("You have reached your destination!", "success");
+            //     }
+            // }, 3000); // Increased interval to allow time for speech
+        }
+
+        function processNextGuidanceStep() {
+            if (currentStep < currentPath.length - 1) {
+                const currentNode = currentPath[currentStep];
+                const nextNode = currentPath[currentStep + 1];
+
+                const currentPos = nodePositions[currentNode];
+                const nextPos = nodePositions[nextNode];
+
+                // Get direction text
+                const directionText = getDirectionText(currentNode, nextNode);
+
+                // Speak the direction
+                speak(directionText, () => {
+                    // Move avatar to next position after speaking
+                    avatar.style.left = (nextPos.x - 15) + 'px';
+                    avatar.style.top = (nextPos.y - 15) + 'px';
+
+                    // Auto-scroll to follow avatar
+                    const mapContainer = document.getElementById('mapContainer');
+                    mapContainer.scrollTo({
+                        left: nextPos.x * floorConfig.zoomLevel - mapContainer.clientWidth / 2,
+                        top: nextPos.y * floorConfig.zoomLevel - mapContainer.clientHeight / 2,
+                        behavior: 'smooth'
+                    });
+
+                    currentStep++;
+                    // Continue with the next step after a short delay
+                    if (isGuidanceActive) { /* Check flag before scheduling next step */
+                        guidanceInterval = setTimeout(processNextGuidanceStep, 500); 
+                    }
+                });
+            } else {
+                // Reached destination
+                stopGuidance();
+                const destinationName = currentPath[currentPath.length - 1].replace(/\//g, ' or ').replace(/HOD/gi, 'H O D');
+                speak(`You have arrived at ${destinationName}. Have a great day!`);
+                showVoiceNotification("You have reached your destination!", "success");
+            }
+        }
+        
+        function stopGuidance() {
+            isGuidanceActive = false; /* Set flag to false */
+            if (guidanceInterval) {
+                clearTimeout(guidanceInterval); /* Use clearTimeout */
+                guidanceInterval = null;
+            }
+            
+            if (avatar) {
+                avatar.style.animation = 'none';
+            }
+            
+            // Stop any ongoing speech
+            if (isSpeaking) {
+                speechSynthesis.cancel();
+                isSpeaking = false;
+                document.getElementById('voiceBtn').classList.remove('speaking');
+            }
+        }
+        
+        function zoomIn() {
+            if (floorConfig.zoomLevel < 2) {
+                floorConfig.zoomLevel += 0.1;
+                drawFloorMap();
+            }
+        }
+        
+        function zoomOut() {
+            if (floorConfig.zoomLevel > 0.5) {
+                floorConfig.zoomLevel -= 0.1;
+                drawFloorMap();
+            }
+        }
+        
+        function resetView() {
+            stopGuidance();
+            floorConfig.zoomLevel = 0.8;
+            currentPath = [];
+            currentPosition = null;
+            destination = null;
+            
+            if (avatar) {
+                avatar.style.display = 'none';
+            }
+            
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.scrollTo(0, 0);
+            drawFloorMap();
+            
+            document.getElementById('from').value = '';
+            document.getElementById('to').value = '';
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            // Populate dropdowns
+            const fromSelect = document.getElementById('from');
+            const toSelect = document.getElementById('to');
+            
+            nodes.forEach(node => {
+                // Add to dropdowns
+                const option = document.createElement('option');
+                option.value = node;
+                option.textContent = node;
+                fromSelect.appendChild(option.cloneNode(true));
+                toSelect.appendChild(option.cloneNode(true));
+            });
+            
+            // Create avatar
+            avatar = createAvatar();
+            document.getElementById('floorMap').appendChild(avatar);
+            
+            // Initialize voice recognition
+            initVoiceRecognition();
+            
+            // Draw the floor map
+            drawFloorMap();
+        };
+    </script>
+</body>
+</html>
